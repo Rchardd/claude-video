@@ -2,6 +2,14 @@
 
 All notable changes to `/watch` are documented here.
 
+## [Unreleased]
+
+### Added
+- **`--lang CODES`** — comma-separated caption languages in priority order (default `en,pt`). The first requested language that yields a track wins; region codes are normalised (`pt-BR` → `pt`) and duplicates collapsed.
+
+### Fixed
+- Captions were requested as `en.*` only, hardcoded in both yt-dlp calls, and `_pick_subtitle()` further preferred `.en.`/`.en-US.`/`.en-GB.`/`.en-orig.` filenames. Any non-English video therefore came back with no transcript — falling through to Whisper (a paid API call) or, keyless, to frames-only, even when the platform had perfectly good native captions in the video's own language.
+
 ## [0.2.0] — 2026-06-29
 
 ### Added
