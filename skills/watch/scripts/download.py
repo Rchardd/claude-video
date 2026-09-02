@@ -69,13 +69,35 @@ def _pick_subtitle(out_dir: Path, lang: str = "en,pt") -> Path | None:
     candidates = sorted(out_dir.glob("video*.vtt"))
     if not candidates:
         return None
-    # Honour the caller's priority order: first requested language that
-    # actually produced a file wins, regardless of alphabetical order.
-    for base in _lang_list(lang):
+
+    def _match(base: str, suffix: str | None) -> Path | None:
+        want = f".{base}-orig." if suffix == "orig" else None
         for c in candidates:
             name = c.name.lower()
-            if f".{base}." in name or f".{base}-" in name:
+            if want is not None:
+                if want in name:
+                    return c
+            elif f".{base}." in name or f".{base}-" in name:
                 return c
+        return None
+
+    bases = _lang_list(lang)
+    # Pass 1 — `-orig` is yt-dlp's name for the track in the language actually
+    # spoken in the video, so it outranks the caller's ordering entirely. Without
+    # this, a Portuguese video that also publishes an English auto-translation
+    # returns the translation under the default `en,pt`: `en` wins the priority
+    # loop, and the user silently gets machine-translated English instead of the
+    # original speech.
+    for base in bases:
+        hit = _match(base, "orig")
+        if hit is not None:
+            return hit
+    # Pass 2 — no original-language track among the requested languages, so fall
+    # back to the caller's priority order.
+    for base in bases:
+        hit = _match(base, None)
+        if hit is not None:
+            return hit
     return candidates[0]
 
 

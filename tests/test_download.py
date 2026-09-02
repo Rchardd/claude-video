@@ -97,6 +97,22 @@ def test_pick_subtitle_skips_languages_that_produced_no_file(tmp_path):
     assert download._pick_subtitle(tmp_path, "en,pt").name == "video.pt-orig.vtt"
 
 
+def test_pick_subtitle_prefers_original_over_a_translation(tmp_path):
+    # A Portuguese video that also publishes an English auto-translation. Under
+    # the default `en,pt` the priority order alone would hand back the English
+    # translation; the `-orig` track is the language actually spoken, so it wins.
+    for name in ("video.en.vtt", "video.pt.vtt", "video.pt-orig.vtt"):
+        (tmp_path / name).touch()
+    assert download._pick_subtitle(tmp_path, "en,pt").name == "video.pt-orig.vtt"
+
+
+def test_pick_subtitle_prefers_requested_original_when_several_exist(tmp_path):
+    for name in ("video.en-orig.vtt", "video.pt-orig.vtt"):
+        (tmp_path / name).touch()
+    assert download._pick_subtitle(tmp_path, "en,pt").name == "video.en-orig.vtt"
+    assert download._pick_subtitle(tmp_path, "pt,en").name == "video.pt-orig.vtt"
+
+
 def test_pick_subtitle_falls_back_to_any_track(tmp_path):
     (tmp_path / "video.de.vtt").touch()
     assert download._pick_subtitle(tmp_path, "en,pt").name == "video.de.vtt"

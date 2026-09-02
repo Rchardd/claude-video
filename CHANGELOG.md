@@ -7,6 +7,9 @@ All notable changes to `/watch` are documented here.
 ### Added
 - **`--lang CODES`** — comma-separated caption languages in priority order (default `en,pt`). The first requested language that yields a track wins; region codes are normalised (`pt-BR` → `pt`) and duplicates collapsed.
 
+### Fixed
+- `_pick_subtitle()` returned an auto-translated track over the original speech. A video whose captions exist in its own language *and* as an English auto-translation matched `en` first under the default `en,pt`, so the transcript came back machine-translated — silently, with nothing in the report saying so. yt-dlp's `-orig` track is the language actually spoken, so it now outranks the caller's ordering; the priority list still decides everything else.
+
 ### Changed
 - Captions are now requested as exact codes (`en,en-orig,pt,pt-orig`) instead of the previous `en.*` glob. yt-dlp matches `--sub-langs` case-insensitively, so a `code.*` glob also selects YouTube's auto-translated pairs (`pt-en`, `en-de`, `pt-PT-de`, …) — on one test video that was 7 caption fetches where 1 was wanted, and the surplus requests drew HTTP 429s that cost the transcript entirely.
 
