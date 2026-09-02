@@ -52,8 +52,17 @@ def _lang_list(lang: str) -> list[str]:
 
 
 def _sub_langs_arg(lang: str) -> str:
-    """Build yt-dlp's --sub-langs value from the priority list."""
-    return ",".join(f"{code}.*" for code in _lang_list(lang))
+    """Build yt-dlp's --sub-langs value from the priority list.
+
+    Exact codes, deliberately not a `code.*` glob. yt-dlp matches --sub-langs
+    case-insensitively, so `pt.*` also selects YouTube's auto-translated pairs
+    (`pt-en`, `pt-de`, `pt-PT-en`, ...). On a video that offers several source
+    languages that turns one caption fetch into seven, and the extra requests
+    draw HTTP 429s that can cost the transcript entirely. `-orig` is yt-dlp's
+    own name for the untranslated track, so it is the one variant worth asking
+    for by name.
+    """
+    return ",".join(f"{code},{code}-orig" for code in _lang_list(lang))
 
 
 def _pick_subtitle(out_dir: Path, lang: str = "en,pt") -> Path | None:

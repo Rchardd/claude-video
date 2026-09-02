@@ -46,9 +46,13 @@ def _sub_langs(argv: list[str]) -> str:
 def _assert_bounded(langs: str, expected: list[str]) -> None:
     tokens = langs.split(",")
     assert "all" not in tokens, f"sub-langs must not request all languages, got {langs!r}"
-    assert tokens == [f"{code}.*" for code in expected], (
+    expanded = [v for code in expected for v in (code, f"{code}-orig")]
+    assert tokens == expanded, (
         f"sub-langs must request exactly the caller's languages, got {langs!r}"
     )
+    # A `code.*` glob would also pull YouTube's auto-translated pairs, which is
+    # the request explosion this guard exists to prevent.
+    assert not any("*" in t for t in tokens), f"sub-langs must not use globs, got {langs!r}"
 
 
 def test_fetch_captions_defaults_to_en_pt(monkeypatch, tmp_path):
